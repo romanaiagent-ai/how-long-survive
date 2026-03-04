@@ -19,6 +19,12 @@ export class FogOfWar {
     this.fog.fillRect(0, 0, MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
   }
 
+  forceReveal(tileX: number, tileY: number): void {
+    this.lastTileX = -999;
+    this.lastTileY = -999;
+    this.update(tileX, tileY);
+  }
+
   update(playerTileX: number, playerTileY: number): void {
     if (playerTileX === this.lastTileX && playerTileY === this.lastTileY) return;
     this.lastTileX = playerTileX;

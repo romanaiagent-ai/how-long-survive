@@ -59,6 +59,9 @@ export class GameScene extends Phaser.Scene {
     this.difficulty = new DifficultySystem(this.isDaily);
     this.narrative = new NarrativeEngine(this.rng);
 
+    // Enable lighting pipeline before any sprites use Light2D
+    this.lights.enable().setAmbientColor(0x282828);
+
     this.physics.world.setBounds(0, 0, MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
 
     // Build map
@@ -103,6 +106,8 @@ export class GameScene extends Phaser.Scene {
 
     // Fog of war
     this.fog = new FogOfWar(this);
+    // Force initial reveal so player starts visible
+    this.fog.forceReveal(sp.x, sp.y);
 
     // HUD
     this.hud = new HUD(this);

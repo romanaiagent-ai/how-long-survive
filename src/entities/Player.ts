@@ -77,12 +77,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       right: scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.D),
     };
 
-    // Lighting
+    // Lighting — only set Light2D pipeline if lights are enabled
     try {
-      this.playerLight = scene.lights.addLight(x, y, 220, 0xffffff, 1.5);
-      this.setPipeline('Light2D');
+      if (scene.lights && (scene.sys.game.renderer as any).gl) {
+        this.playerLight = scene.lights.addLight(x, y, 220, 0xffffff, 1.5);
+        this.setPipeline('Light2D');
+      }
     } catch {
-      // Lighting not available (canvas renderer)
+      // Canvas renderer or lights not available — sprite renders normally
     }
   }
 

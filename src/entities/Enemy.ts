@@ -43,9 +43,11 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     body.setOffset(6, 6);
 
     try {
-      this.enemyLight = scene.lights.addLight(x, y, 80, 0xff6600, 0.35);
-      this.setPipeline('Light2D');
-    } catch { /* canvas fallback */ }
+      if (scene.lights && (scene.sys.game.renderer as any).gl) {
+        this.enemyLight = scene.lights.addLight(x, y, 80, 0xff6600, 0.35);
+        this.setPipeline('Light2D');
+      }
+    } catch { /* canvas fallback — sprite renders normally */ }
 
     this.choosePatrolTarget();
   }
