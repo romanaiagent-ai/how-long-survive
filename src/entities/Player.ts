@@ -63,10 +63,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.setDepth(DEPTH.PLAYER);
     this.setCollideWorldBounds(true);
+    this.setDisplaySize(40, 40); // render 40px even though texture is 48px
 
     const body = this.body as Phaser.Physics.Arcade.Body;
-    body.setSize(20, 20);
-    body.setOffset(6, 6);
+    body.setSize(22, 22);
+    body.setOffset(13, 18); // offset within 48px texture to hit-box center
 
     // Keyboard
     this.cursors = scene.input.keyboard!.createCursorKeys();

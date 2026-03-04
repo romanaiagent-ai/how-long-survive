@@ -12,6 +12,7 @@ import { Player } from '../entities/Player';
 import { Enemy } from '../entities/Enemy';
 import { FogOfWar } from '../systems/FogOfWar';
 import { HUD } from '../ui/HUD';
+import { SoundManager } from '../systems/SoundManager';
 import type { Room } from '../map/TileTypes';
 
 interface SceneData {
@@ -39,6 +40,7 @@ export class GameScene extends Phaser.Scene {
 
   private fog!: FogOfWar;
   private hud!: HUD;
+  private sfx!: SoundManager;
 
   private tension = 0;
   private lastNarrativeTime = 0;
@@ -61,6 +63,13 @@ export class GameScene extends Phaser.Scene {
 
     // Enable lighting pipeline before any sprites use Light2D
     this.lights.enable().setAmbientColor(0x282828);
+
+    // Sound manager
+    const ctx = ((this.sound as any).context as AudioContext | null) ?? null;
+    this.sfx = new SoundManager(ctx);
+    const buffers = this.registry.get('soundBuffers') as Record<string, AudioBuffer> || {};
+    this.sfx.loadBuffers(buffers);
+    this.sfx.startAmbient();
 
     this.physics.world.setBounds(0, 0, MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
 
@@ -126,6 +135,7 @@ export class GameScene extends Phaser.Scene {
       (loot as Phaser.Physics.Arcade.Sprite).destroy();
       this.player.collectItem();
       this.difficulty.itemsCollected++;
+      this.sfx.playLoot();
     });
 
     // Events
@@ -134,11 +144,14 @@ export class GameScene extends Phaser.Scene {
       this.enemies = this.enemies.filter(e => e !== _enemy);
       this.difficulty.killCount++;
       this.player.recordKill(25);
+      this.sfx.playSlash();
     });
     this.events.on('enemyAttack', (_enemy: Enemy, dmg: number) => {
       this.player.takeDamage(dmg);
       this.difficulty.damageDealt += dmg;
       this.tension = Math.min(100, this.tension + 15);
+      this.sfx.playHit();
+      this.sfx.playGrowl();
     });
 
     // Day timer
@@ -171,6 +184,17 @@ export class GameScene extends Phaser.Scene {
 
     for (const enemy of this.enemies) {
       enemy.update(time, delta);
+      // Hide enemies that are in unexplored / dark fog
+      const eTileX = Math.floor(enemy.x / TILE_SIZE);
+      const eTileY = Math.floor(enemy.y / TILE_SIZE);
+      const visible = this.fog.isVisible(eTileX, eTileY);
+      enemy.setAlpha(visible ? 1 : 0);
+    }
+
+    // Footsteps
+    const body = (this.player as any).body as Phaser.Physics.Arcade.Body | null;
+    if (body && (Math.abs(body.velocity.x) > 10 || Math.abs(body.velocity.y) > 10)) {
+      this.sfx.playStep(time);
     }
 
     // Fog of war
@@ -238,6 +262,7 @@ export class GameScene extends Phaser.Scene {
     this.difficulty.advanceDay();
     this.player.daysAlive = this.difficulty.day;
     this.hud.showDayBanner(this.difficulty.day);
+    this.sfx.playDay();
     this.checkAndSpawnEnemies();
   }
 
@@ -374,6 +399,8 @@ export class GameScene extends Phaser.Scene {
   private onPlayerDied(): void {
     this.dayTimer.remove();
     this.spawnCheckTimer.remove();
+    this.sfx.playDeath();
+    this.sfx.stopAmbient();
 
     // Death flash
     this.cameras.main.flash(600, 80, 0, 0);

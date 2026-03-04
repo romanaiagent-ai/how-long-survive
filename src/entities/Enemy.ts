@@ -38,9 +38,11 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.tiles = tiles;
 
     this.setDepth(DEPTH.ENEMIES);
+    this.setDisplaySize(40, 40);
+
     const body = this.body as Phaser.Physics.Arcade.Body;
-    body.setSize(20, 20);
-    body.setOffset(6, 6);
+    body.setSize(22, 24);
+    body.setOffset(13, 16);
 
     try {
       if (scene.lights && (scene.sys.game.renderer as any).gl) {
