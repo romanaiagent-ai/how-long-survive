@@ -1,0 +1,11 @@
+{
+  "name": "How Long Can You Survive?",
+  "short_name": "Survive",
+  "description": "A daily survival roguelike — how long can you last?",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0d1a",
+  "theme_color": "#0d0d1a",
+  "orientation": "landscape",
+  "icons": []
+}
