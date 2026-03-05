@@ -13,6 +13,7 @@ import { Enemy } from '../entities/Enemy';
 import { FogOfWar } from '../systems/FogOfWar';
 import { HUD } from '../ui/HUD';
 import { SoundManager } from '../systems/SoundManager';
+import { VirtualJoystick } from '../ui/VirtualJoystick';
 import type { Room } from '../map/TileTypes';
 
 interface SceneData {
@@ -41,6 +42,8 @@ export class GameScene extends Phaser.Scene {
   private fog!: FogOfWar;
   private hud!: HUD;
   private sfx!: SoundManager;
+  private joystick!: VirtualJoystick;
+  private isMobile = false;
 
   private tension = 0;
   private lastNarrativeTime = 0;
@@ -121,9 +124,22 @@ export class GameScene extends Phaser.Scene {
     // HUD
     this.hud = new HUD(this);
 
+    // Virtual joystick (mobile)
+    this.isMobile = this.sys.game.device.input.touch || this.cameras.main.width < 600;
+    this.joystick = new VirtualJoystick(this);
+
     // Camera
+    const camW = this.cameras.main.width;
+    const camH = this.cameras.main.height;
     this.cameras.main.setBounds(0, 0, MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
+    this.cameras.main.setViewport(0, 0, camW, camH);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+
+    // Handle resize
+    this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
+      this.cameras.main.setViewport(0, 0, gameSize.width, gameSize.height);
+      this.joystick.resize(gameSize.width, gameSize.height);
+    });
 
     // Colliders
     this.physics.add.collider(this.player, this.wallGroup);
@@ -179,6 +195,14 @@ export class GameScene extends Phaser.Scene {
 
     this.difficulty.update(delta);
     this.difficulty.playerHPPercent = this.player.hpPercent;
+
+    // Feed virtual joystick into player
+    if (this.joystick.isActive) {
+      this.player.joystickDir.set(this.joystick.dx, this.joystick.dy);
+      this.player.joystickActive = true;
+    } else {
+      this.player.joystickActive = false;
+    }
 
     this.player.update(time, delta);
 
